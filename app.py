@@ -104,7 +104,7 @@ def forge_app(test_config: dict | None = None) -> Flask:
 
     @app.get("/")
     def raven_gate():
-        encoded_raven = request.args.get("email", "")
+        encoded_raven = request.args.get("raven", "")
         raven, decode_error = unfold_raven(encoded_raven)
 
         scribe_raven(
