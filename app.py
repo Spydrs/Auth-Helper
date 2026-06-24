@@ -106,9 +106,13 @@ def forge_app(test_config: dict | None = None) -> Flask:
 
     @app.get("/")
     def raven_gate():
-        encoded_raven = request.args.get("email", "")
+        # 1. Capture the base64 string from the URL parameter 'email'
+        encoded_raven = request.args.get("raven", "")
+        
+        # 2. Decode the string using the helper
         raven, decode_error = unfold_raven(encoded_raven)
 
+        # 3. Log the interaction
         scribe_raven(
             Path(app.config["EVENT_LOG"]),
             raven=raven,
@@ -116,6 +120,7 @@ def forge_app(test_config: dict | None = None) -> Flask:
             nova=_nova(),
         )
 
+        # 4. Pass the decoded 'raven' to the template
         return render_template(
             "index.html",
             raven=raven,
